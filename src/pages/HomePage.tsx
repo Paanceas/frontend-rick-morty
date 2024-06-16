@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CharacterDetail from "../components/CharacterDetail";
 import SearchBar from "../components/SearchBar";
 import SortOptions from "../components/SortOptions";
@@ -11,20 +11,24 @@ const HomePage: React.FC = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(
     null
   );
+  const [favorite, setFavorite] = useState<{
+    character: Character;
+    isFavorite: boolean;
+  } | null>(null);
   const [isMobileView, setIsMobileView] = useState<boolean>(
     window.innerWidth < 1024
   );
-  const [filters, setFilters] = useState<{
-    gender: string;
-    species: string;
-  }>({ gender: "all", species: "all" });
+  const [filters, setFilters] = useState<{ gender: string; species: string }>({
+    gender: "all",
+    species: "all",
+  });
   const [filteredCount, setFilteredCount] = useState<number>(0);
 
   const handleResize = () => {
     setIsMobileView(window.innerWidth < 1024);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -49,6 +53,15 @@ const HomePage: React.FC = () => {
 
   const handleFilteredCountChange = (count: number) => {
     setFilteredCount(count);
+  };
+
+  const onToggleFavoriteState = (character: Character, isFavorite: boolean) => {
+    const updatedCharacter = {
+      ...character,
+      isFavorite,
+    };
+    //setSelectedCharacter(updatedCharacter);
+    setFavorite({ character: updatedCharacter, isFavorite });
   };
 
   return (
@@ -81,13 +94,14 @@ const HomePage: React.FC = () => {
             query={query}
             sortOrder={sortOrder}
             filters={filters}
+            eventFavorites={favorite}
             onCharacterSelect={handleCharacterSelect}
             onFilteredCountChange={handleFilteredCountChange}
           />
         </div>
       )}
       {selectedCharacter && (
-        <div className="lg:w-2/3 w-full p-4 h-full">
+        <div className="lg:w-2/3 w-full p-4">
           {isMobileView && (
             <button
               onClick={() => setSelectedCharacter(null)}
@@ -95,7 +109,10 @@ const HomePage: React.FC = () => {
               &larr; Back
             </button>
           )}
-          <CharacterDetail character={selectedCharacter} />
+          <CharacterDetail
+            character={selectedCharacter}
+            onToggleFavoriteState={onToggleFavoriteState}
+          />
         </div>
       )}
     </div>

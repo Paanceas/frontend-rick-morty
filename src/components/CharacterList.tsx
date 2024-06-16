@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery } from "@apollo/client";
 import CharacterCard from "./CharacterCard";
 import { Character } from "../models/Character.model";
@@ -9,6 +9,7 @@ interface CharacterListProps {
   query: string;
   sortOrder: string;
   filters: { gender: string; species: string };
+  eventFavorites: { character: Character; isFavorite: boolean } | null;
   onCharacterSelect: (character: Character) => void;
   onFilteredCountChange: (count: number) => void;
 }
@@ -17,42 +18,38 @@ const CharacterList: React.FC<CharacterListProps> = ({
   query,
   sortOrder,
   filters,
+  eventFavorites,
   onCharacterSelect,
   onFilteredCountChange,
 }) => {
-  const [variables, setVariables] = useState({
-    name: query,
-    gender: filters.gender === "all" ? "" : filters.gender,
-    species: filters.species === "all" ? "" : filters.species,
-  });
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(
+    null
+  );
+  const [favoriteCharacters, setFavoriteCharacters] = useState<Character[]>([]);
+  const [filteredCharacters, setFilteredCharacters] = useState<Character[]>([]);
+  const [localEventFavorites, setLocalEventFavorites] =
+    useState(eventFavorites);
 
-  useEffect(() => {
-    setVariables({
+  const variables = useMemo(
+    () => ({
       name: query,
       gender: filters.gender === "all" ? "" : filters.gender,
       species: filters.species === "all" ? "" : filters.species,
-    });
-  }, [query, filters]);
+    }),
+    [query, filters]
+  );
 
   const {
     loading: loadingFavorites,
     error: errorFavorites,
     data: dataFavorites,
   } = useQuery(GET_FAVORITES_CHARACTERS);
-
   const {
     loading: loadingCharacters,
     error: errorCharacters,
     data: dataCharacters,
-  } = useQuery(GET_CHARACTERS_FILTER, {
-    variables,
-  });
-
-  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
-    null
-  );
-  const [favoriteCharacters, setFavoriteCharacters] = useState<Character[]>([]);
-  const [filteredCharacters, setFilteredCharacters] = useState<Character[]>([]);
+    refetch: refetchCharacters,
+  } = useQuery(GET_CHARACTERS_FILTER, { variables, skip: !dataFavorites });
 
   useEffect(() => {
     if (dataFavorites?.favoritesCharacters) {
@@ -66,68 +63,134 @@ const CharacterList: React.FC<CharacterListProps> = ({
   }, [dataFavorites]);
 
   useEffect(() => {
-    if (dataCharacters && dataCharacters.characters) {
-      const filtered = dataCharacters.characters.filter(
-        (character: Character) =>
-          !favoriteCharacters.some(
-            (favCharacter) => favCharacter.id === character.id
-          )
+    if (dataCharacters?.characters && dataFavorites?.favoritesCharacters) {
+      const favoritesNames = new Set(
+        dataFavorites.favoritesCharacters.map((char: Character) => char.name)
       );
-      setFilteredCharacters(filtered);
-      onFilteredCountChange(filtered.length + favoriteCharacters.length);
+      setFilteredCharacters(
+        dataCharacters.characters.filter(
+          (character: Character) => !favoritesNames.has(character.name)
+        )
+      );
     }
-  }, [dataCharacters, favoriteCharacters, onFilteredCountChange]);
+  }, [dataCharacters, dataFavorites]);
 
-  const handleCharacterClick = (character: Character) => {
-    setSelectedCharacterId(character.id);
-    onCharacterSelect(character);
-  };
+  useEffect(() => {
+    onFilteredCountChange(
+      filteredCharacters.length + favoriteCharacters.length
+    );
+  }, [
+    filteredCharacters.length,
+    favoriteCharacters.length,
+    onFilteredCountChange,
+  ]);
 
-  const handleToggleFavorite = (character: Character) => {
-    setFavoriteCharacters((prev) => {
-      return prev.some((favCharacter) => favCharacter.id === character.id)
-        ? prev.filter((favCharacter) => favCharacter.id !== character.id)
-        : [...prev, character];
-    });
-  };
+  const handleCharacterClick = useCallback(
+    (character: Character) => {
+      setSelectedCharacter(character);
+      onCharacterSelect(character);
+    },
+    [onCharacterSelect]
+  );
 
-  if (loadingCharacters || loadingFavorites) return <p>Loading...</p>;
-  if (errorCharacters) return <p>Error: {errorCharacters.message}</p>;
+  const handleToggleFavorite = useCallback(
+    async (character: Character, isFavorite: boolean) => {
+      setFavoriteCharacters((prev) => {
+        if (isFavorite) {
+          if (
+            !prev.some((favCharacter) => favCharacter.name === character.name)
+          ) {
+            return [...prev, { ...character, isFavorite: true }];
+          }
+          return prev;
+        }
+        return prev.filter(
+          (favCharacter) => favCharacter.name !== character.name
+        );
+      });
+
+      if (selectedCharacter?.name === character.name) {
+        handleCharacterClick({ ...character, isFavorite });
+      }
+
+      setFilteredCharacters((prev) => {
+        if (!isFavorite) {
+          if (
+            !prev.some(
+              (filteredCharacter) => filteredCharacter.name === character.name
+            )
+          ) {
+            return [...prev, { ...character, isFavorite: false }];
+          }
+          return prev;
+        }
+        return prev.filter(
+          (filteredCharacter) => filteredCharacter.name !== character.name
+        );
+      });
+
+      await refetchCharacters();
+    },
+    [selectedCharacter, handleCharacterClick, refetchCharacters]
+  );
+
+  useEffect(() => {
+    if (
+      localEventFavorites?.character &&
+      localEventFavorites?.isFavorite !== undefined
+    ) {
+      const { character, isFavorite } = localEventFavorites;
+      console.log("🚀 ~ useEffect ~ eventFavorites:", localEventFavorites);
+      handleToggleFavorite(character, isFavorite);
+      setLocalEventFavorites(null); // Actualiza el estado interno
+    }
+  }, [localEventFavorites, handleToggleFavorite]);
+
+  useEffect(() => {
+    setLocalEventFavorites(eventFavorites);
+  }, [eventFavorites]);
+
+  const sortedFavoriteCharacters = useMemo(() => {
+    return [...favoriteCharacters].sort((a, b) =>
+      sortOrder === "asc"
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name)
+    );
+  }, [favoriteCharacters, sortOrder]);
+
+  const sortedFilteredCharacters = useMemo(() => {
+    return [...filteredCharacters].sort((a, b) =>
+      sortOrder === "asc"
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name)
+    );
+  }, [filteredCharacters, sortOrder]);
+
+  if (loadingFavorites || loadingCharacters) return <p>Loading...</p>;
   if (errorFavorites) return <p>Error: {errorFavorites.message}</p>;
-
-  const sortedFavoriteCharacters = [...favoriteCharacters].sort((a, b) =>
-    sortOrder === "asc"
-      ? a.name.localeCompare(b.name)
-      : b.name.localeCompare(a.name)
-  );
-
-  const sortedFilteredCharacters = [...filteredCharacters].sort((a, b) =>
-    sortOrder === "asc"
-      ? a.name.localeCompare(b.name)
-      : b.name.localeCompare(a.name)
-  );
+  if (errorCharacters) return <p>Error: {errorCharacters.message}</p>;
 
   return (
     <div>
       <h3 className="text-lg font-semibold mb-2">Starred Characters</h3>
       {sortedFavoriteCharacters.map((character: Character, index: number) => (
         <CharacterCard
-          key={character.id}
+          key={`favorite-${character.id}-${index}`}
           character={character}
           onClick={() => handleCharacterClick(character)}
-          isSelected={character.id === selectedCharacterId}
-          onToggleFavorite={() => handleToggleFavorite(character)}
+          isSelected={selectedCharacter?.name === character.name}
+          onToggleFavoriteState={handleToggleFavorite}
           isLastItem={index === sortedFavoriteCharacters.length - 1}
         />
       ))}
       <h3 className="text-lg font-semibold mb-2">Characters</h3>
       {sortedFilteredCharacters.map((character: Character, index: number) => (
         <CharacterCard
-          key={character.id}
+          key={`filtered-${character.id}-${index}`}
           character={character}
           onClick={() => handleCharacterClick(character)}
-          isSelected={character.id === selectedCharacterId}
-          onToggleFavorite={() => handleToggleFavorite(character)}
+          isSelected={selectedCharacter?.name === character.name}
+          onToggleFavoriteState={handleToggleFavorite}
           isLastItem={index === sortedFilteredCharacters.length - 1}
         />
       ))}

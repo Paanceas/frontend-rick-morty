@@ -1,11 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { Character } from "../models/Character.model";
+import FavoriteButton from "./FavoriteButton";
 
 interface CharacterCardProps {
   character: Character;
   onClick: () => void;
   isSelected: boolean;
-  onToggleFavorite: () => void;
+  onToggleFavoriteState: (
+    updatedCharacter: Character,
+    isFavorite: boolean
+  ) => void;
   isLastItem: boolean;
 }
 
@@ -13,9 +17,20 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   character,
   onClick,
   isSelected,
-  onToggleFavorite,
+  onToggleFavoriteState,
   isLastItem,
 }) => {
+  const [currentCharacter, setCurrentCharacter] =
+    useState<Character>(character);
+
+  const handleToggleFavoriteState = (
+    updatedCharacter: Character,
+    isFavorite: boolean
+  ) => {
+    setCurrentCharacter(updatedCharacter);
+    onToggleFavoriteState(updatedCharacter, isFavorite);
+  };
+
   return (
     <div
       className={`flex items-center p-4 cursor-pointer ${
@@ -26,10 +41,10 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       onClick={onClick}>
       <img
         src={
-          character.image ||
+          currentCharacter.image ||
           "https://rickandmortyapi.com/api/character/avatar/361.jpeg"
         }
-        alt={character.name}
+        alt={currentCharacter.name}
         className="w-12 h-12 rounded-full"
       />
       <div className="ml-4 flex-grow">
@@ -37,21 +52,16 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
           className={`text-lg font-medium ${
             isSelected ? "text-primary700" : "text-gray-900"
           }`}>
-          {character.name}
+          {currentCharacter.name}
         </h2>
-        <p className="text-gray-600">{character.species}</p>
+        <p className="text-gray-600">{currentCharacter.species}</p>
       </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleFavorite();
-        }}
-        className="ml-auto focus:outline-none">
-        <i
-          className={`fas fa-heart ${
-            character.isFavorite ? "text-green-500" : "text-gray-300"
-          }`}></i>
-      </button>
+      <FavoriteButton
+        character={currentCharacter}
+        position="relative"
+        containerStyle="ml-auto"
+        onToggleFavoriteState={handleToggleFavoriteState}
+      />
     </div>
   );
 };
