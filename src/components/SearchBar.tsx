@@ -23,7 +23,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterChange }) => {
 
   const handleFilter = () => {
     onFilterChange({ characterType, species });
-    setShowFilter(false); // Hide filter after applying
+    setShowFilter(false);
   };
 
   return (

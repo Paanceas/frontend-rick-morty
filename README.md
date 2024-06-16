@@ -1,30 +1,61 @@
-# React + TypeScript + Vite
+# Rick and Morty Character List
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a React application that displays a list of characters from the "Rick and Morty" series. It allows users to search, filter, and sort the characters. Users can also mark characters as favorites.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Search characters by name
+- Filter characters by starred status and species
+- Sort characters alphabetically
+- Mark characters as favorites
+- Responsive design for mobile and desktop
 
-## Expanding the ESLint configuration
+## Technologies Used
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- React
+- Apollo Client
+- GraphQL
+- Tailwind CSS
 
-- Configure the top-level `parserOptions` property like this:
+## Getting Started
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+### Prerequisites
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+- Node.js (>=14.x.x)
+- npm (>=6.x.x) or yarn (>=1.x.x)
+
+### Installation
+
+1. Clone the repository:
+    ```
+    git clone https://github.com/Paanceas/frontend-rick-morty
+    ```
+
+2. Navigate to the project directory:
+    ```
+    cd rick-and-morty-character-list
+    ```
+
+3. Install the dependencies:
+    ```
+    npm install
+    ```
+    or
+    ```
+    yarn install
+    ```
+
+### Running the Application
+
+1. Start the development server:
+    ```
+    npm start
+    ```
+    or
+    ```
+    yarn start
+    ```
+
+## License
+
+This project is licensed under the MIT License.
