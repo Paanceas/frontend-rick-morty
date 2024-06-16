@@ -16,12 +16,12 @@ const SortOptions: React.FC<SortOptionsProps> = ({ onSort }) => {
   return (
     <button
       onClick={handleSort}
-      className="flex items-center bg-purple-500 text-white rounded-full px-4 py-2 mb-4 shadow-lg focus:outline-none">
+      className="flex items-center bg-transparent text-purple-700 rounded px-3 py-2 mb-4 transition-colors duration-300 hover:bg-purple-100 hover:text-purple-700">
+      <span>Sort by Name ({order === "asc" ? "A-Z" : "Z-A"})</span>
       <i
-        className={`mr-2 fas ${
+        className={`ml-2 fas ${
           order === "asc" ? "fa-sort-alpha-down" : "fa-sort-alpha-up"
         }`}></i>
-      Sort by Name ({order === "asc" ? "A-Z" : "Z-A"})
     </button>
   );
 };

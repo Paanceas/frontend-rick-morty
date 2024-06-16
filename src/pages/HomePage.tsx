@@ -11,6 +11,13 @@ const HomePage: React.FC = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(
     null
   );
+  const [filters, setFilters] = useState<{
+    characterType: string;
+    species: string;
+  }>({
+    characterType: "all",
+    species: "all",
+  });
   const [isMobileView, setIsMobileView] = useState<boolean>(
     window.innerWidth < 1024
   );
@@ -38,16 +45,27 @@ const HomePage: React.FC = () => {
     setSelectedCharacter(character);
   };
 
+  const handleFilterChange = (newFilters: {
+    characterType: string;
+    species: string;
+  }) => {
+    setFilters(newFilters);
+  };
+
   return (
     <div className="container mx-auto p-4 flex flex-col lg:flex-row h-full">
       {(!isMobileView || !selectedCharacter) && (
         <div className="lg:w-1/3 w-full p-4">
           <h1 className="text-3xl font-bold mb-4">Rick and Morty Characters</h1>
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar
+            onSearch={handleSearch}
+            onFilterChange={handleFilterChange}
+          />
           <SortOptions onSort={handleSort} />
           <CharacterList
             query={query}
             sortOrder={sortOrder}
+            filters={filters}
             onCharacterSelect={handleCharacterSelect}
           />
         </div>
