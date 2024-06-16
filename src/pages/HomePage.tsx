@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import CharacterDetail from "../components/CharacterDetail";
 import SearchBar from "../components/SearchBar";
 import SortOptions from "../components/SortOptions";
@@ -11,22 +11,20 @@ const HomePage: React.FC = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(
     null
   );
-  const [filters, setFilters] = useState<{
-    characterType: string;
-    species: string;
-  }>({
-    characterType: "all",
-    species: "all",
-  });
   const [isMobileView, setIsMobileView] = useState<boolean>(
     window.innerWidth < 1024
   );
+  const [filters, setFilters] = useState<{
+    characterType: string;
+    species: string;
+  }>({ characterType: "all", species: "all" });
+  const [filteredCount, setFilteredCount] = useState<number>(0);
 
   const handleResize = () => {
     setIsMobileView(window.innerWidth < 1024);
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -45,11 +43,15 @@ const HomePage: React.FC = () => {
     setSelectedCharacter(character);
   };
 
-  const handleFilterChange = (newFilters: {
+  const handleFilterChange = (filters: {
     characterType: string;
     species: string;
   }) => {
-    setFilters(newFilters);
+    setFilters(filters);
+  };
+
+  const handleFilteredCountChange = (count: number) => {
+    setFilteredCount(count);
   };
 
   return (
@@ -62,11 +64,28 @@ const HomePage: React.FC = () => {
             onFilterChange={handleFilterChange}
           />
           <SortOptions onSort={handleSort} />
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-blue-500">{filteredCount} Results</span>
+            {filters.characterType !== "all" || filters.species !== "all" ? (
+              <span className="bg-green-100 text-green-700 rounded-full px-4 py-1">
+                {
+                  Object.values(filters).filter((value) => value !== "all")
+                    .length
+                }{" "}
+                Filter
+                {Object.values(filters).filter((value) => value !== "all")
+                  .length > 1
+                  ? "s"
+                  : ""}
+              </span>
+            ) : null}
+          </div>
           <CharacterList
             query={query}
             sortOrder={sortOrder}
             filters={filters}
             onCharacterSelect={handleCharacterSelect}
+            onFilteredCountChange={handleFilteredCountChange}
           />
         </div>
       )}
@@ -75,8 +94,8 @@ const HomePage: React.FC = () => {
           {isMobileView && (
             <button
               onClick={() => setSelectedCharacter(null)}
-              className="mb-4 text-purple-600 flex items-center">
-              <i className="fas fa-arrow-left mr-2"></i> Back
+              className="mb-4 text-purple-600">
+              &larr; Back
             </button>
           )}
           <CharacterDetail id={selectedCharacter.id} />
