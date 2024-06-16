@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@apollo/client";
 import CharacterCard from "./CharacterCard";
 import { Character } from "../models/Character.model";
@@ -16,12 +16,26 @@ const CharacterList: React.FC<CharacterListProps> = ({
   onCharacterSelect,
 }) => {
   const { loading, error, data } = useQuery(GET_CHARACTERS_FILTER, {
-    variables: { filter: { name: query }, orderBy: { name: sortOrder } },
+    variables: { filter: { name: query } },
   });
+
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
     null
   );
   const [favoriteCharacters, setFavoriteCharacters] = useState<string[]>([]);
+  const [sortedCharacters, setSortedCharacters] = useState<Character[]>([]);
+
+  useEffect(() => {
+    if (data) {
+      const characters = [...data.characters.results];
+      if (sortOrder === "asc") {
+        characters.sort((a, b) => a.name.localeCompare(b.name));
+      } else {
+        characters.sort((a, b) => b.name.localeCompare(a.name));
+      }
+      setSortedCharacters(characters);
+    }
+  }, [data, sortOrder]);
 
   const handleCharacterClick = (character: Character) => {
     setSelectedCharacterId(character.id);
@@ -39,48 +53,43 @@ const CharacterList: React.FC<CharacterListProps> = ({
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
-  const allCharacters = data.characters.results;
-  const starredCharacters = allCharacters.filter((character: Character) =>
+  const starredCharacters = sortedCharacters.filter((character: Character) =>
     favoriteCharacters.includes(character.id)
   );
-  const regularCharacters = allCharacters.filter(
+  const regularCharacters = sortedCharacters.filter(
     (character: Character) => !favoriteCharacters.includes(character.id)
   );
 
   return (
     <div>
       <h3 className="text-lg font-semibold mb-2">Starred Characters</h3>
-      <div className="space-y-2">
-        {starredCharacters.map((character: Character, index: number) => (
-          <CharacterCard
-            key={character.id}
-            character={{
-              ...character,
-              isFavorite: favoriteCharacters.includes(character.id),
-            }}
-            onClick={() => handleCharacterClick(character)}
-            isSelected={character.id === selectedCharacterId}
-            onToggleFavorite={() => handleToggleFavorite(character.id)}
-            isLastItem={index === starredCharacters.length - 1}
-          />
-        ))}
-      </div>
-      <h3 className="text-lg font-semibold my-4">Characters</h3>
-      <div className="space-y-2">
-        {regularCharacters.map((character: Character, index: number) => (
-          <CharacterCard
-            key={character.id}
-            character={{
-              ...character,
-              isFavorite: favoriteCharacters.includes(character.id),
-            }}
-            onClick={() => handleCharacterClick(character)}
-            isSelected={character.id === selectedCharacterId}
-            onToggleFavorite={() => handleToggleFavorite(character.id)}
-            isLastItem={index === regularCharacters.length - 1}
-          />
-        ))}
-      </div>
+      {starredCharacters.map((character: Character, index: number) => (
+        <CharacterCard
+          key={character.id}
+          character={{
+            ...character,
+            isFavorite: favoriteCharacters.includes(character.id),
+          }}
+          onClick={() => handleCharacterClick(character)}
+          isSelected={character.id === selectedCharacterId}
+          onToggleFavorite={() => handleToggleFavorite(character.id)}
+          isLastItem={index === starredCharacters.length - 1}
+        />
+      ))}
+      <h3 className="text-lg font-semibold mb-2">Characters</h3>
+      {regularCharacters.map((character: Character, index: number) => (
+        <CharacterCard
+          key={character.id}
+          character={{
+            ...character,
+            isFavorite: favoriteCharacters.includes(character.id),
+          }}
+          onClick={() => handleCharacterClick(character)}
+          isSelected={character.id === selectedCharacterId}
+          onToggleFavorite={() => handleToggleFavorite(character.id)}
+          isLastItem={index === regularCharacters.length - 1}
+        />
+      ))}
     </div>
   );
 };

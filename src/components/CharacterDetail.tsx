@@ -28,7 +28,7 @@ const CharacterDetail: React.FC<CharacterDetailProps> = ({ id }) => {
   const isFavorite = favoriteCharacters.includes(character.id);
 
   return (
-    <div className="p-[100px] flex flex-col items-start rounded-lg h-full shadow-left-only bg-white">
+    <div className="p-[10%] flex flex-col items-center lg:items-start rounded-lg h-full shadow-left-only">
       <div className="relative mb-4">
         <img
           src={character.image}
@@ -44,10 +44,10 @@ const CharacterDetail: React.FC<CharacterDetailProps> = ({ id }) => {
             }`}></i>
         </div>
       </div>
-      <h2 className="text-xl font-semibold text-left mb-4 ml-4">
+      <h2 className="text-xl font-semibold text-center lg:text-left mb-4">
         {character.name}
       </h2>
-      <ul className="w-full mt-4 pl-4">
+      <ul className="w-full mt-4 px-4 lg:px-0">
         <li className="flex flex-col py-2 border-b">
           <span className="text-gray-600">Specie</span>
           <span className="text-gray-900">{character.species}</span>
