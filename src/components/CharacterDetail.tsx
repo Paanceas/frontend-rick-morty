@@ -1,37 +1,22 @@
-import React, { useState } from "react";
-import { useQuery } from "@apollo/client";
-import { GET_CHARACTER } from "../graphql/queries/getCharacter";
+import React from "react";
+import { Character } from "../models/Character.model";
 
 interface CharacterDetailProps {
-  id: string;
+  character: Character;
 }
 
-const CharacterDetail: React.FC<CharacterDetailProps> = ({ id }) => {
-  const { loading, error, data } = useQuery(GET_CHARACTER, {
-    variables: { id },
-  });
-
-  const [favoriteCharacters, setFavoriteCharacters] = useState<string[]>([]);
-
+const CharacterDetail: React.FC<CharacterDetailProps> = ({ character }) => {
   const handleToggleFavorite = (characterId: string) => {
-    setFavoriteCharacters((prev) =>
-      prev.includes(characterId)
-        ? prev.filter((id) => id !== characterId)
-        : [...prev, characterId]
-    );
+    console.log("🚀 ~ handleToggleFavorite ~ characterId:", characterId);
   };
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
-
-  const character = data.character;
-  const isFavorite = favoriteCharacters.includes(character.id);
-
   return (
     <div className="p-[10%] flex flex-col items-center lg:items-start rounded-lg h-full shadow-left-only">
       <div className="relative mb-4">
         <img
-          src={character.image}
+          src={
+            character.image ||
+            "https://rickandmortyapi.com/api/character/avatar/361.jpeg"
+          }
           alt={character.name}
           className="w-24 h-24 rounded-full"
         />
@@ -40,7 +25,7 @@ const CharacterDetail: React.FC<CharacterDetailProps> = ({ id }) => {
           className="absolute bottom-0 right-0 bg-white rounded-full p-1 cursor-pointer">
           <i
             className={`fas fa-heart ${
-              isFavorite ? "text-green-500" : "text-gray-300"
+              character.isFavorite ? "text-green-500" : "text-gray-300"
             }`}></i>
         </div>
       </div>

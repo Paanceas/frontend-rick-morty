@@ -3,11 +3,12 @@ import { useQuery } from "@apollo/client";
 import CharacterCard from "./CharacterCard";
 import { Character } from "../models/Character.model";
 import { GET_CHARACTERS_FILTER } from "../graphql/queries/getCharactersFilter";
+import { GET_FAVORITES_CHARACTERS } from "../graphql/queries/getFavoritiesCharacters";
 
 interface CharacterListProps {
   query: string;
   sortOrder: string;
-  filters: { characterType: string; species: string };
+  filters: { gender: string; species: string };
   onCharacterSelect: (character: Character) => void;
   onFilteredCountChange: (count: number) => void;
 }
@@ -19,73 +20,88 @@ const CharacterList: React.FC<CharacterListProps> = ({
   onCharacterSelect,
   onFilteredCountChange,
 }) => {
-  const { loading, error, data } = useQuery(GET_CHARACTERS_FILTER, {
-    variables: { filter: { name: query }, orderBy: { name: sortOrder } },
+  const [variables, setVariables] = useState({
+    name: query,
+    gender: filters.gender === "all" ? "" : filters.gender,
+    species: filters.species === "all" ? "" : filters.species,
   });
+
+  useEffect(() => {
+    setVariables({
+      name: query,
+      gender: filters.gender === "all" ? "" : filters.gender,
+      species: filters.species === "all" ? "" : filters.species,
+    });
+  }, [query, filters]);
+
+  const {
+    loading: loadingFavorites,
+    error: errorFavorites,
+    data: dataFavorites,
+  } = useQuery(GET_FAVORITES_CHARACTERS);
+
+  const {
+    loading: loadingCharacters,
+    error: errorCharacters,
+    data: dataCharacters,
+  } = useQuery(GET_CHARACTERS_FILTER, {
+    variables,
+  });
+
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
     null
   );
-  const [favoriteCharacters, setFavoriteCharacters] = useState<string[]>([]);
+  const [favoriteCharacters, setFavoriteCharacters] = useState<Character[]>([]);
+  const [filteredCharacters, setFilteredCharacters] = useState<Character[]>([]);
 
   useEffect(() => {
-    if (data) {
-      let filteredCharacters = data.characters.results;
-
-      if (filters.characterType === "starred") {
-        filteredCharacters = filteredCharacters.filter((character: Character) =>
-          favoriteCharacters.includes(character.id)
-        );
-      } else if (filters.characterType === "others") {
-        filteredCharacters = filteredCharacters.filter(
-          (character: Character) => !favoriteCharacters.includes(character.id)
-        );
-      }
-
-      if (filters.species !== "all") {
-        filteredCharacters = filteredCharacters.filter(
-          (character: Character) => character.species === filters.species
-        );
-      }
-
-      onFilteredCountChange(filteredCharacters.length);
+    if (dataFavorites?.favoritesCharacters) {
+      setFavoriteCharacters(
+        dataFavorites.favoritesCharacters.map((character: Character) => ({
+          ...character,
+          isFavorite: true,
+        }))
+      );
     }
-  }, [data, filters, favoriteCharacters, onFilteredCountChange]);
+  }, [dataFavorites]);
+
+  useEffect(() => {
+    if (dataCharacters && dataCharacters.characters) {
+      const filtered = dataCharacters.characters.filter(
+        (character: Character) =>
+          !favoriteCharacters.some(
+            (favCharacter) => favCharacter.id === character.id
+          )
+      );
+      setFilteredCharacters(filtered);
+      onFilteredCountChange(filtered.length + favoriteCharacters.length);
+    }
+  }, [dataCharacters, favoriteCharacters, onFilteredCountChange]);
 
   const handleCharacterClick = (character: Character) => {
     setSelectedCharacterId(character.id);
     onCharacterSelect(character);
   };
 
-  const handleToggleFavorite = (characterId: string) => {
-    setFavoriteCharacters((prev) =>
-      prev.includes(characterId)
-        ? prev.filter((id) => id !== characterId)
-        : [...prev, characterId]
-    );
+  const handleToggleFavorite = (character: Character) => {
+    setFavoriteCharacters((prev) => {
+      return prev.some((favCharacter) => favCharacter.id === character.id)
+        ? prev.filter((favCharacter) => favCharacter.id !== character.id)
+        : [...prev, character];
+    });
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
+  if (loadingCharacters || loadingFavorites) return <p>Loading...</p>;
+  if (errorCharacters) return <p>Error: {errorCharacters.message}</p>;
+  if (errorFavorites) return <p>Error: {errorFavorites.message}</p>;
 
-  let filteredCharacters = data.characters.results;
+  const sortedFavoriteCharacters = [...favoriteCharacters].sort((a, b) =>
+    sortOrder === "asc"
+      ? a.name.localeCompare(b.name)
+      : b.name.localeCompare(a.name)
+  );
 
-  if (filters.characterType === "starred") {
-    filteredCharacters = filteredCharacters.filter((character: Character) =>
-      favoriteCharacters.includes(character.id)
-    );
-  } else if (filters.characterType === "others") {
-    filteredCharacters = filteredCharacters.filter(
-      (character: Character) => !favoriteCharacters.includes(character.id)
-    );
-  }
-
-  if (filters.species !== "all") {
-    filteredCharacters = filteredCharacters.filter(
-      (character: Character) => character.species === filters.species
-    );
-  }
-
-  const sortedCharacters = [...filteredCharacters].sort((a, b) =>
+  const sortedFilteredCharacters = [...filteredCharacters].sort((a, b) =>
     sortOrder === "asc"
       ? a.name.localeCompare(b.name)
       : b.name.localeCompare(a.name)
@@ -94,41 +110,27 @@ const CharacterList: React.FC<CharacterListProps> = ({
   return (
     <div>
       <h3 className="text-lg font-semibold mb-2">Starred Characters</h3>
-      {sortedCharacters
-        .filter((character: Character) =>
-          favoriteCharacters.includes(character.id)
-        )
-        .map((character: Character, index: number) => (
-          <CharacterCard
-            key={character.id}
-            character={{
-              ...character,
-              isFavorite: favoriteCharacters.includes(character.id),
-            }}
-            onClick={() => handleCharacterClick(character)}
-            isSelected={character.id === selectedCharacterId}
-            onToggleFavorite={() => handleToggleFavorite(character.id)}
-            isLastItem={index === sortedCharacters.length - 1}
-          />
-        ))}
+      {sortedFavoriteCharacters.map((character: Character, index: number) => (
+        <CharacterCard
+          key={character.id}
+          character={character}
+          onClick={() => handleCharacterClick(character)}
+          isSelected={character.id === selectedCharacterId}
+          onToggleFavorite={() => handleToggleFavorite(character)}
+          isLastItem={index === sortedFavoriteCharacters.length - 1}
+        />
+      ))}
       <h3 className="text-lg font-semibold mb-2">Characters</h3>
-      {sortedCharacters
-        .filter(
-          (character: Character) => !favoriteCharacters.includes(character.id)
-        )
-        .map((character: Character, index: number) => (
-          <CharacterCard
-            key={character.id}
-            character={{
-              ...character,
-              isFavorite: favoriteCharacters.includes(character.id),
-            }}
-            onClick={() => handleCharacterClick(character)}
-            isSelected={character.id === selectedCharacterId}
-            onToggleFavorite={() => handleToggleFavorite(character.id)}
-            isLastItem={index === sortedCharacters.length - 1}
-          />
-        ))}
+      {sortedFilteredCharacters.map((character: Character, index: number) => (
+        <CharacterCard
+          key={character.id}
+          character={character}
+          onClick={() => handleCharacterClick(character)}
+          isSelected={character.id === selectedCharacterId}
+          onToggleFavorite={() => handleToggleFavorite(character)}
+          isLastItem={index === sortedFilteredCharacters.length - 1}
+        />
+      ))}
     </div>
   );
 };

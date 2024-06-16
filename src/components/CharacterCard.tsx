@@ -25,7 +25,10 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       } first:border-t last:border-b-0 rounded-lg`}
       onClick={onClick}>
       <img
-        src={character.image}
+        src={
+          character.image ||
+          "https://rickandmortyapi.com/api/character/avatar/361.jpeg"
+        }
         alt={character.name}
         className="w-12 h-12 rounded-full"
       />

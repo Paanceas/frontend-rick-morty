@@ -1,14 +1,16 @@
 import { gql } from '@apollo/client';
 
 export const GET_CHARACTERS_FILTER = gql`
-  query GetCharacters($filter: FilterCharacter) {
-    characters(filter: $filter) {
-      results {
-        id
+  query GetCharacters($status: String,$species: String,$gender: String,$name: String){ 
+    characters(status: $status, species:$species, gender: $gender, name: $name) {
+      id
+      name
+      status
+      species
+      gender
+      origin {
         name
-        image
-        species
       }
     }
-  }
+}
 `;

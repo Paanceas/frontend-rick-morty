@@ -15,9 +15,9 @@ const HomePage: React.FC = () => {
     window.innerWidth < 1024
   );
   const [filters, setFilters] = useState<{
-    characterType: string;
+    gender: string;
     species: string;
-  }>({ characterType: "all", species: "all" });
+  }>({ gender: "all", species: "all" });
   const [filteredCount, setFilteredCount] = useState<number>(0);
 
   const handleResize = () => {
@@ -43,10 +43,7 @@ const HomePage: React.FC = () => {
     setSelectedCharacter(character);
   };
 
-  const handleFilterChange = (filters: {
-    characterType: string;
-    species: string;
-  }) => {
+  const handleFilterChange = (filters: { gender: string; species: string }) => {
     setFilters(filters);
   };
 
@@ -63,10 +60,10 @@ const HomePage: React.FC = () => {
             onSearch={handleSearch}
             onFilterChange={handleFilterChange}
           />
-          <SortOptions onSort={handleSort} />
+          {filteredCount > 0 && <SortOptions onSort={handleSort} />}
           <div className="flex justify-between items-center mb-4">
             <span className="text-blue-500">{filteredCount} Results</span>
-            {filters.characterType !== "all" || filters.species !== "all" ? (
+            {filters.gender !== "all" || filters.species !== "all" ? (
               <span className="bg-green-100 text-green-700 rounded-full px-4 py-1">
                 {
                   Object.values(filters).filter((value) => value !== "all")
@@ -98,7 +95,7 @@ const HomePage: React.FC = () => {
               &larr; Back
             </button>
           )}
-          <CharacterDetail id={selectedCharacter.id} />
+          <CharacterDetail character={selectedCharacter} />
         </div>
       )}
     </div>

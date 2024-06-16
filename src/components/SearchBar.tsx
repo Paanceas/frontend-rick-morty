@@ -2,13 +2,13 @@ import React, { useState } from "react";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
-  onFilterChange: (filters: { characterType: string; species: string }) => void;
+  onFilterChange: (filters: { gender: string; species: string }) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterChange }) => {
   const [query, setQuery] = useState<string>("");
   const [showFilter, setShowFilter] = useState<boolean>(false);
-  const [characterType, setCharacterType] = useState<string>("all");
+  const [gender, setGender] = useState<string>("all");
   const [species, setSpecies] = useState<string>("all");
 
   const handleSearch = () => {
@@ -22,7 +22,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterChange }) => {
   };
 
   const handleFilter = () => {
-    onFilterChange({ characterType, species });
+    onFilterChange({ gender, species });
     setShowFilter(false);
   };
 
@@ -49,34 +49,34 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterChange }) => {
       {showFilter && (
         <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg p-4 w-full z-10">
           <div className="mb-4">
-            <h3 className="text-gray-600 mb-2">Character</h3>
+            <h3 className="text-gray-600 mb-2">Gender</h3>
             <div className="flex space-x-2 w-full">
               <button
-                onClick={() => setCharacterType("all")}
+                onClick={() => setGender("all")}
                 className={`flex-1 rounded-lg px-4 py-2 ${
-                  characterType === "all"
+                  gender === "all"
                     ? "bg-primary100 text-primary700"
                     : "bg-white text-gray-900 border border-gray-300"
                 }`}>
                 All
               </button>
               <button
-                onClick={() => setCharacterType("starred")}
+                onClick={() => setGender("Male")}
                 className={`flex-1 rounded-lg px-4 py-2 ${
-                  characterType === "starred"
+                  gender === "Male"
                     ? "bg-primary100 text-primary700"
                     : "bg-white text-gray-900 border border-gray-300"
                 }`}>
-                Starred
+                Male
               </button>
               <button
-                onClick={() => setCharacterType("others")}
+                onClick={() => setGender("Female")}
                 className={`flex-1 rounded-lg px-4 py-2 ${
-                  characterType === "others"
+                  gender === "Female"
                     ? "bg-primary100 text-primary700"
                     : "bg-white text-gray-900 border border-gray-300"
                 }`}>
-                Others
+                Female
               </button>
             </div>
           </div>
