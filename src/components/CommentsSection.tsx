@@ -1,30 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
+import { useComments } from "../hooks/useComments";
+import CommentsList from "./CommentsList";
 
 interface CommentsSectionProps {
   characterId: string;
 }
 
 const CommentsSection: React.FC<CommentsSectionProps> = ({ characterId }) => {
-  const [comments, setComments] = useState<string[]>([]);
-  const [newComment, setNewComment] = useState<string>("");
-
-  const handleAddComment = () => {
-    setComments([...comments, newComment]);
-    setNewComment("");
-  };
+  const { comments, newComment, setNewComment, addComment } = useComments();
 
   return (
     <div className="mt-4 w-full">
       <h3 className="text-lg font-bold mb-2">
         Comments for Character ID: {characterId}
       </h3>
-      <ul className="list-disc pl-5">
-        {comments.map((comment, index) => (
-          <li key={index} className="mb-1">
-            {comment}
-          </li>
-        ))}
-      </ul>
+      <CommentsList comments={comments} />
       <input
         type="text"
         value={newComment}
@@ -33,7 +23,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ characterId }) => {
         className="border border-gray-300 rounded px-3 py-2 w-full mt-2"
       />
       <button
-        onClick={handleAddComment}
+        onClick={addComment}
         className="bg-blue-500 text-white rounded px-3 py-2 mt-2">
         Add Comment
       </button>

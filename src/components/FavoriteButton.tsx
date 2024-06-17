@@ -1,8 +1,6 @@
 import React from "react";
-import { useMutation } from "@apollo/client";
 import { Character } from "../models/Character.model";
-import { ADD_FAVORITE_CHARACTER } from "../graphql/mutations/addFavoriteCharacter";
-import { DELETE_FAVORITE_CHARACTER } from "../graphql/mutations/delFavoriteCharacter";
+import { useToggleFavorite } from "../hooks/useToggleFavorite";
 
 interface FavoriteButtonProps {
   character: Character;
@@ -22,31 +20,10 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({
   iconStyle = "",
   onToggleFavoriteState,
 }) => {
-  const [addFavoriteCharacter] = useMutation(ADD_FAVORITE_CHARACTER);
-  const [deleteFavoriteCharacter] = useMutation(DELETE_FAVORITE_CHARACTER);
+  const { toggleFavorite } = useToggleFavorite(onToggleFavoriteState);
 
-  const handleToggleFavorite = async () => {
-    try {
-      if (character.isFavorite) {
-        await deleteFavoriteCharacter({
-          variables: { id: character.id },
-        });
-        onToggleFavoriteState({ ...character, isFavorite: false }, false);
-      } else {
-        await addFavoriteCharacter({
-          variables: {
-            name: character.name,
-            status: character.status,
-            species: character.species,
-            gender: character.gender,
-            origin: character.origin.name,
-          },
-        });
-        onToggleFavoriteState({ ...character, isFavorite: true }, true);
-      }
-    } catch (error) {
-      console.error("Error toggling favorite status:", error);
-    }
+  const handleToggleFavorite = () => {
+    toggleFavorite(character);
   };
 
   return (

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
+import FilterOptions from "./FilterOptions";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -11,20 +12,23 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterChange }) => {
   const [gender, setGender] = useState<string>("all");
   const [species, setSpecies] = useState<string>("all");
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     onSearch(query);
-  };
+  }, [query, onSearch]);
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        handleSearch();
+      }
+    },
+    [handleSearch]
+  );
 
-  const handleFilter = () => {
+  const handleFilterChange = useCallback(() => {
     onFilterChange({ gender, species });
     setShowFilter(false);
-  };
+  }, [gender, species, onFilterChange]);
 
   return (
     <div className="relative mb-4">
@@ -47,77 +51,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterChange }) => {
         </button>
       </div>
       {showFilter && (
-        <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg p-4 w-full z-10">
-          <div className="mb-4">
-            <h3 className="text-gray-600 mb-2">Gender</h3>
-            <div className="flex space-x-2 w-full">
-              <button
-                onClick={() => setGender("all")}
-                className={`flex-1 rounded-lg px-4 py-2 ${
-                  gender === "all"
-                    ? "bg-primary100 text-primary700"
-                    : "bg-white text-gray-900 border border-gray-300"
-                }`}>
-                All
-              </button>
-              <button
-                onClick={() => setGender("Male")}
-                className={`flex-1 rounded-lg px-4 py-2 ${
-                  gender === "Male"
-                    ? "bg-primary100 text-primary700"
-                    : "bg-white text-gray-900 border border-gray-300"
-                }`}>
-                Male
-              </button>
-              <button
-                onClick={() => setGender("Female")}
-                className={`flex-1 rounded-lg px-4 py-2 ${
-                  gender === "Female"
-                    ? "bg-primary100 text-primary700"
-                    : "bg-white text-gray-900 border border-gray-300"
-                }`}>
-                Female
-              </button>
-            </div>
-          </div>
-          <div className="mb-4">
-            <h3 className="text-gray-600 mb-2">Specie</h3>
-            <div className="flex space-x-2 w-full">
-              <button
-                onClick={() => setSpecies("all")}
-                className={`flex-1 rounded-lg px-4 py-2 ${
-                  species === "all"
-                    ? "bg-primary100 text-primary700"
-                    : "bg-white text-gray-900 border border-gray-300"
-                }`}>
-                All
-              </button>
-              <button
-                onClick={() => setSpecies("Human")}
-                className={`flex-1 rounded-lg px-4 py-2 ${
-                  species === "Human"
-                    ? "bg-primary100 text-primary700"
-                    : "bg-white text-gray-900 border border-gray-300"
-                }`}>
-                Human
-              </button>
-              <button
-                onClick={() => setSpecies("Alien")}
-                className={`flex-1 rounded-lg px-4 py-2 ${
-                  species === "Alien"
-                    ? "bg-primary100 text-primary700"
-                    : "bg-white text-gray-900 border border-gray-300"
-                }`}>
-                Alien
-              </button>
-            </div>
-          </div>
-          <button
-            onClick={handleFilter}
-            className="bg-primary600 text-white rounded-lg px-4 py-2 w-full">
-            Filter
-          </button>
-        </div>
+        <FilterOptions
+          gender={gender}
+          species={species}
+          setGender={setGender}
+          setSpecies={setSpecies}
+          onApplyFilter={handleFilterChange}
+        />
       )}
     </div>
   );

@@ -1,17 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 
 interface SortOptionsProps {
   onSort: (order: string) => void;
+  initialOrder?: string;
 }
 
-const SortOptions: React.FC<SortOptionsProps> = ({ onSort }) => {
-  const [order, setOrder] = useState<string>("asc");
+const SortOptions: React.FC<SortOptionsProps> = ({
+  onSort,
+  initialOrder = "asc",
+}) => {
+  const [order, setOrder] = useState<string>(initialOrder);
 
-  const handleSort = () => {
+  const handleSort = useCallback(() => {
     const newOrder = order === "asc" ? "desc" : "asc";
     setOrder(newOrder);
     onSort(newOrder);
-  };
+  }, [order, onSort]);
 
   return (
     <button

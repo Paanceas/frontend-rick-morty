@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Character } from "../models/Character.model";
 import FavoriteButton from "./FavoriteButton";
 
@@ -22,6 +22,10 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
 }) => {
   const [currentCharacter, setCurrentCharacter] =
     useState<Character>(character);
+
+  useEffect(() => {
+    setCurrentCharacter(character);
+  }, [character]);
 
   const handleToggleFavoriteState = (
     updatedCharacter: Character,
