@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@apollo/client";
 import { Character } from "../models/Character.model";
-import { GET_COMMENTS } from "../graphql/queries/getComments";
-import { Comment } from "../models/Comment.model";
 import FavoriteButton from "./FavoriteButton";
-import { ADD_COMMENT } from "../graphql/mutations/addComment";
+import { useGetComments } from "../hooks/useGetComments";
+import { useAddComment } from "../hooks/useAddComment";
 
 interface CharacterDetailProps {
   character: Character;
@@ -19,48 +17,25 @@ const CharacterDetail: React.FC<CharacterDetailProps> = ({
     useState<Character>(character);
 
   const {
-    loading: loadingComments,
-    error: errorComments,
-    data: dataComments,
-  } = useQuery(GET_COMMENTS, {
-    variables: { characterId: currentCharacter.id },
-  });
+    loading,
+    error,
+    comments: fetchedComments,
+  } = useGetComments(currentCharacter.id);
+  const { newComment, setNewComment, addComment, isCommentEmpty } =
+    useAddComment(currentCharacter.id);
 
-  const [addComment] = useMutation(ADD_COMMENT, {
-    refetchQueries: [
-      { query: GET_COMMENTS, variables: { characterId: currentCharacter.id } },
-    ],
-  });
-
-  const [newComment, setNewComment] = useState<string>("");
-  const [isCommentEmpty, setIsCommentEmpty] = useState<boolean>(false);
+  useEffect(() => {
+    setCurrentCharacter(character);
+  }, [character]);
 
   const handleToggleFavoriteState = (
     updatedCharacter: Character,
     isFavorite: boolean
   ) => {
-    setCurrentCharacter({
-      ...updatedCharacter,
-      isFavorite: isFavorite,
-    });
-    onToggleFavoriteState(updatedCharacter, isFavorite);
+    const updatedChar = { ...updatedCharacter, isFavorite };
+    setCurrentCharacter(updatedChar);
+    onToggleFavoriteState(updatedChar, isFavorite);
   };
-
-  const handleAddComment = () => {
-    if (newComment.trim() === "") {
-      setIsCommentEmpty(true);
-      return;
-    }
-    addComment({
-      variables: { characterId: currentCharacter.id, content: newComment },
-    });
-    setNewComment("");
-    setIsCommentEmpty(false);
-  };
-
-  useEffect(() => {
-    setCurrentCharacter(character);
-  }, [character]);
 
   return (
     <div className="p-[10%] flex flex-col items-center lg:items-start rounded-lg h-full shadow-left-only">
@@ -93,7 +68,7 @@ const CharacterDetail: React.FC<CharacterDetailProps> = ({
           <span className="text-gray-900">{currentCharacter.status}</span>
         </li>
         <li className="flex flex-col py-2 border-b">
-          <span className="text-gray-600">Occupation</span>
+          <span className="text-gray-600">Gender</span>
           <span className="text-gray-900">{currentCharacter.gender}</span>
         </li>
         <li className="flex flex-col py-2">
@@ -101,15 +76,15 @@ const CharacterDetail: React.FC<CharacterDetailProps> = ({
           <span className="text-gray-900">{currentCharacter.origin.name}</span>
         </li>
       </ul>
-      {loadingComments ? (
+      {loading ? (
         <p>Loading comments...</p>
-      ) : errorComments ? (
-        <p>Error loading comments: {errorComments.message}</p>
+      ) : error ? (
+        <p>Error loading comments: {error.message}</p>
       ) : (
         <div className="w-full mt-4">
           <h3 className="text-lg font-semibold mb-2">Comments</h3>
           <ul className="space-y-2 mb-4">
-            {dataComments.comments.map((comment: Comment) => (
+            {fetchedComments.map((comment) => (
               <li
                 key={comment.id}
                 className="bg-gray-100 p-2 rounded-lg shadow-md">
@@ -127,7 +102,7 @@ const CharacterDetail: React.FC<CharacterDetailProps> = ({
               } focus:border-primary500`}
             />
             <button
-              onClick={handleAddComment}
+              onClick={addComment}
               className="bg-purple-700 text-purple-100 rounded-full p-3 flex items-center justify-center mb-2 hover:bg-purple-100 hover:text-purple-700 focus:outline-none">
               <i className="fas fa-paper-plane"></i>
             </button>
