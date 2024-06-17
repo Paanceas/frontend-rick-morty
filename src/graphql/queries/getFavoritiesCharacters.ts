@@ -8,6 +8,7 @@ export const GET_FAVORITES_CHARACTERS = gql`
             status,
             species,
             gender,
+            image,
             origin,
             createdAt,
             updatedAt,

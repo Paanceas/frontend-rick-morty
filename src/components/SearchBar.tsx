@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import FilterOptions from "./FilterOptions";
 
 interface SearchBarProps {
@@ -29,6 +29,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFilterChange }) => {
     onFilterChange({ gender, species });
     setShowFilter(false);
   }, [gender, species, onFilterChange]);
+
+  useEffect(() => {
+    if (query === "") {
+      handleSearch();
+    }
+  }, [query, handleSearch]);
 
   return (
     <div className="relative mb-4">

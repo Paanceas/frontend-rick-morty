@@ -23,12 +23,15 @@ export const useToggleFavorite = (onToggleFavoriteState: (updatedCharacter: Char
                         species: character.species,
                         gender: character.gender,
                         origin: character.origin.name,
+                        characterId: character.id,
+                        image: character.image,
                     },
                 });
                 onToggleFavoriteState({ ...character, isFavorite: true }, true);
             }
         } catch (error) {
             console.error("Error toggling favorite status:", error);
+            window.location.reload();
         }
     }, [addFavoriteCharacter, deleteFavoriteCharacter, onToggleFavoriteState]);
 

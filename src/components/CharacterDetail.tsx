@@ -41,10 +41,7 @@ const CharacterDetail: React.FC<CharacterDetailProps> = ({
     <div className="p-[10%] flex flex-col items-center lg:items-start rounded-lg h-full shadow-left-only">
       <div className="relative mb-4">
         <img
-          src={
-            currentCharacter.image ||
-            "https://rickandmortyapi.com/api/character/avatar/361.jpeg"
-          }
+          src={currentCharacter.image}
           alt={currentCharacter.name}
           className="w-24 h-24 rounded-full"
         />

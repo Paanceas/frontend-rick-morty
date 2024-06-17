@@ -7,6 +7,7 @@ export const GET_CHARACTERS_FILTER = gql`
       name
       status
       species
+      image
       gender
       origin {
         name
